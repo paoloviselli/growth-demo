@@ -1,0 +1,21 @@
+## INSTANT MEETING PREP — MVP BUILD
+
+- [x] Scaffold Vite + Tailwind + shadcn
+- [x] Init Firebase + Emulator
+- [ ] Setup routing: `/meeting-prep`
+- [ ] Build dashboard layout (black sidebar, shadcn)
+- [ ] Create `MeetingCard` component
+- [ ] Create Firestore mocks:
+  - `users/demo/meetings/*`
+  - `users/demo/emails/*`
+  - `users/demo/notes/*`
+- [ ] Fetch mock meetings via React Query
+- [ ] Create `PrepDialog` with markdown viewer
+- [ ] Implement Firebase Fn `generatePrep`
+  - Fetch related notes & emails
+  - Format context for OpenAI
+  - Return markdown string
+- [ ] Display result in dialog
+- [ ] Capture PostHog events
+- [ ] Gate with PostHog flag
+- [ ] Polish: README, Loom, CI

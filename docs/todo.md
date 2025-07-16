@@ -2,14 +2,14 @@
 
 - [x] Scaffold Vite + Tailwind + shadcn
 - [x] Init Firebase + Emulator
-- [ ] Setup routing: `/meeting-prep`
-- [ ] Build dashboard layout (black sidebar, shadcn)
-- [ ] Create `MeetingCard` component
+- [x] Setup routing: `/meeting-prep`
+- [x] Build dashboard layout (black sidebar, shadcn)
 - [ ] Create Firestore mocks:
   - `users/demo/meetings/*`
   - `users/demo/emails/*`
   - `users/demo/notes/*`
 - [ ] Fetch mock meetings via React Query
+- [ ] Create `MeetingCard` component
 - [ ] Create `PrepDialog` with markdown viewer
 - [ ] Implement Firebase Fn `generatePrep`
   - Fetch related notes & emails

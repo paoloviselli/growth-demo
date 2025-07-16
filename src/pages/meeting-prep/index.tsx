@@ -1,22 +1,26 @@
-import { Card } from '@/components/ui/card';
-import { calendarEventsRaw } from '@/lib/utils';
+import useMeetings from '@/hooks/use-meetings';
 import DashboardLayout from '@/components/DashboardLayout';
+import MeetingCard from '@/components/meeting-card';
 
 export default function MeetingPrepPage() {
+  const { data: meetings = [], isLoading, error } = useMeetings();
+
+  console.log(meetings);
+
   return (
     <DashboardLayout>
-      <div className="space-y-4 p-6">
-        <h1 className="text-2xl font-bold">Tomorrow’s Meetings</h1>
-
-        {calendarEventsRaw.map(event => (
-          <Card key={event.id} className="p-4">
-            <div className="font-medium">{event.title}</div>
-            <div className="text-muted-foreground text-sm">
-              {new Date(event.startsAt).toLocaleTimeString()} –{' '}
-              {new Date(event.endsAt).toLocaleTimeString()}
-            </div>
-          </Card>
-        ))}
+      <div className="p-6">
+        <h1 className="mb-4 text-2xl font-bold">Upcoming Meetings</h1>
+        {isLoading && <div>Loading…</div>}
+        {error && <div className="text-red-500">Error loading meetings</div>}
+        {meetings.length === 0 && !isLoading && (
+          <div>No meetings in the next 24h.</div>
+        )}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {meetings.map(event => (
+            <MeetingCard key={event.id} meeting={event} />
+          ))}
+        </div>
       </div>
     </DashboardLayout>
   );

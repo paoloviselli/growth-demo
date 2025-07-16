@@ -1,5 +1,28 @@
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
+import { initializeApp, getApps } from 'firebase/app';
+import { getFirestore, connectFirestoreEmulator } from 'firebase/firestore';
+
+const firebaseConfig = {
+  apiKey: 'fake-api-key',
+  authDomain: 'localhost',
+  projectId: 'fyxer-demo',
+};
+
+let app;
+if (!getApps().length) {
+  app = initializeApp(firebaseConfig);
+} else {
+  app = getApps()[0];
+}
+
+const db = getFirestore(app);
+
+if (import.meta.env.MODE === 'development') {
+  connectFirestoreEmulator(db, '127.0.0.1', 8081);
+}
+
+export { db };
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));

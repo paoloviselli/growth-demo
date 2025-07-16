@@ -4,18 +4,18 @@
 - [x] Init Firebase + Emulator
 - [x] Setup routing: `/meeting-prep`
 - [x] Build dashboard layout (black sidebar, shadcn)
-- [ ] Create Firestore mocks:
+- [x] Create Firestore mocks:
   - `users/demo/meetings/*`
   - `users/demo/emails/*`
   - `users/demo/notes/*`
-- [ ] Fetch mock meetings via React Query
-- [ ] Create `MeetingCard` component
-- [ ] Create `PrepDialog` with markdown viewer
-- [ ] Implement Firebase Fn `generatePrep`
+- [x] Fetch mock meetings via React Query
+- [x] Create `MeetingCard` component
+- [x] Implement Firebase Fn `generatePrep`
   - Fetch related notes & emails
   - Format context for OpenAI
   - Return markdown string
-- [ ] Display result in dialog
+- [x] Create `PrepDialog` with markdown viewer
+- [x] Display result in dialog
 - [ ] Capture PostHog events
 - [ ] Gate with PostHog flag
 - [ ] Polish: README, Loom, CI

@@ -13,6 +13,15 @@ interface PrepDialogProps {
   error: string | null;
 }
 
+function stripCodeBlock(md: string | null): string {
+  if (!md) return '';
+  const trimmed = md.trim();
+  // If it's a code block, extract the content inside
+  const match = trimmed.match(/^```(?:markdown)?\n?([\s\S]*?)\n?```$/i);
+  if (match) return match[1].trim();
+  return trimmed;
+}
+
 export default function PrepDialog({
   open,
   setOpen,
@@ -25,14 +34,16 @@ export default function PrepDialog({
         <DialogHeader>
           <DialogTitle>Meeting Prep</DialogTitle>
         </DialogHeader>
-        <div className="prose mt-4 max-h-[80vh] max-w-none overflow-y-auto">
-          {error ? (
-            <div className="text-destructive">{error}</div>
-          ) : prepMd ? (
-            <ReactMarkdown>{prepMd}</ReactMarkdown>
-          ) : (
-            <div className="text-muted-foreground">No prep generated.</div>
-          )}
+        <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
+          <div className="prose mt-4 max-h-[80vh] max-w-none space-y-4 overflow-y-auto p-6 pr-[4px] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-zinc-300 dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-track]:bg-transparent">
+            {error ? (
+              <div className="text-destructive">{error}</div>
+            ) : prepMd ? (
+              <ReactMarkdown>{stripCodeBlock(prepMd)}</ReactMarkdown>
+            ) : (
+              <div className="text-muted-foreground">No prep generated.</div>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -63,7 +63,27 @@ export const generatePrep = onCall({ timeoutSeconds: 60 }, async request => {
   const notes = notesSnap.docs.map(doc => doc.data());
 
   // 4. Format prompt for OpenRouter
-  const prompt = `You are an expert meeting assistant. Given the following meeting, emails, and notes, generate a markdown prep brief.\n\nMeeting: ${meeting.title}\nDescription: ${meeting.description || '(none)'}\nAttendees: ${(meeting.attendees || []).join(', ')}\nTime: ${meeting.time || '(unknown)'}\n\nRelevant Emails:\n${emails.map(e => `- ${e.subject || '(no subject)'}: ${e.snippet || e.body || '(no content)'}`).join('\n')}\n\nRelevant Notes:\n${notes.map(n => `- ${n.content || n.text || '(no content)'}`).join('\n')}\n\nGenerate a markdown summary for this meeting prep, including:\n- Bullet summary of prior exchanges\n- Agenda guess (if missing)\n- Blurbs for attendees\n- Suggested questions\n`;
+  const prompt = `Always return your response as valid markdown, wrapped in a code block like \`\`\`markdown ... \`\`\`. Do not include any text outside the code block.
+
+You are an expert meeting assistant. Given the following meeting, emails, and notes, generate a markdown prep brief.
+
+Meeting: ${meeting.title}
+Description: ${meeting.description || '(none)'}
+Attendees: ${(meeting.attendees || []).join(', ')}
+Time: ${meeting.time || '(unknown)'}
+
+Relevant Emails:
+${emails.map(e => `- ${e.subject || '(no subject)'}: ${e.snippet || e.body || '(no content)'}`).join('\n')}
+
+Relevant Notes:
+${notes.map(n => `- ${n.content || n.text || '(no content)'}`).join('\n')}
+
+Generate a markdown summary for this meeting prep, including:
+- Bullet summary of prior exchanges
+- Agenda guess (if missing)
+- Blurbs for attendees
+- Suggested questions
+`;
 
   // 5. Call OpenRouter API
   const apiKey =
@@ -80,6 +100,18 @@ export const generatePrep = onCall({ timeoutSeconds: 60 }, async request => {
       request.rawRequest.app?.get('openrouter.key'));
   if (!finalKey) throw new Error('OpenRouter API key not set');
 
+  console.log(
+    'OpenRouter request body:',
+    JSON.stringify(
+      {
+        model: 'mistralai/mixtral-8x7b-instruct', // dev
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 1024,
+      },
+      null,
+      2
+    )
+  );
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -90,7 +122,7 @@ export const generatePrep = onCall({ timeoutSeconds: 60 }, async request => {
     },
     body: JSON.stringify({
       //   model: 'openai/gpt-4o', // demo
-      model: 'mistralai/mistral-7b-instruct', // dev
+      model: 'mistralai/mixtral-8x7b-instruct', // dev
       messages: [{ role: 'user', content: prompt }],
       max_tokens: 1024,
     }),

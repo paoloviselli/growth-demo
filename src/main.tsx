@@ -3,6 +3,7 @@ import './index.css';
 import App from './App.tsx';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getFunctions, connectFunctionsEmulator } from 'firebase/functions';
+import { PostHogProvider } from 'posthog-js/react';
 
 const queryClient = new QueryClient();
 
@@ -12,7 +13,17 @@ if (import.meta.env.DEV) {
 }
 
 createRoot(document.getElementById('root')!).render(
-  <QueryClientProvider client={queryClient}>
-    <App />
-  </QueryClientProvider>
+  <PostHogProvider
+    apiKey={import.meta.env.VITE_PUBLIC_POSTHOG_KEY}
+    options={{
+      api_host: import.meta.env.VITE_PUBLIC_POSTHOG_HOST,
+      defaults: '2025-05-24',
+      capture_exceptions: true,
+      debug: import.meta.env.MODE === 'development',
+    }}
+  >
+    <QueryClientProvider client={queryClient}>
+      <App />
+    </QueryClientProvider>
+  </PostHogProvider>
 );

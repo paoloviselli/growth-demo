@@ -12,6 +12,14 @@ import { getFunctions, httpsCallable } from 'firebase/functions';
 import { useState } from 'react';
 import { getApp } from 'firebase/app';
 import PrepDialog from './PrepDialog';
+import PrepSheet from './PrepSheet';
+import posthog from 'posthog-js';
+import {
+  useFeatureFlagEnabled,
+  useFeatureFlagVariantKey,
+} from 'posthog-js/react';
+import { RingLoader } from 'react-spinners';
+import { useEffect } from 'react';
 
 interface Meeting {
   id: string;
@@ -36,13 +44,42 @@ export default function MeetingCard({ meeting }: { meeting: Meeting }) {
   const [prepMd, setPrepMd] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const isPrepEnabled = useFeatureFlagEnabled('generate-prep-enabled');
+  const ctaVariant = useFeatureFlagVariantKey('prep-button-cta-text');
+  const promptVariant = useFeatureFlagVariantKey('meeting-prep-prompt');
+  const outputVariant = useFeatureFlagVariantKey('meeting-prep-ui');
+
+  let buttonText = 'Generate Brief';
+  if (ctaVariant === 'generate-prep') buttonText = 'Generate Prep';
+  if (ctaVariant === 'quick-prep') buttonText = 'Quick Prep';
+  if (ctaVariant === 'ai-prep') buttonText = 'AI Prep';
+
+  useEffect(() => {
+    if (isPrepEnabled) {
+      posthog.capture('prep_button_shown', {
+        cta_variant: ctaVariant,
+        output_variant: outputVariant,
+        feature_flag: 'generate-prep-enabled',
+      });
+    }
+  }, [isPrepEnabled, ctaVariant, outputVariant]);
+
   const handleGeneratePrep = async () => {
+    posthog.capture('generate_prep_clicked', {
+      cta_variant: ctaVariant,
+      output_variant: outputVariant,
+      feature_flag: 'generate-prep-enabled',
+    });
     setLoading(true);
     setError(null);
     try {
       const functions = getFunctions(getApp());
       const generatePrep = httpsCallable(functions, 'generatePrep');
-      const res = await generatePrep({ uid: 'demo', eventId: meeting.id });
+      const res = await generatePrep({
+        uid: 'demo',
+        eventId: meeting.id,
+        variant: promptVariant,
+      });
       const data = res.data as unknown;
       setPrepMd(
         typeof data === 'object' && data !== null && 'prepMd' in data
@@ -50,6 +87,10 @@ export default function MeetingCard({ meeting }: { meeting: Meeting }) {
           : null
       );
       setOpen(true);
+      posthog.capture('prep_modal_opened', {
+        output_variant: outputVariant,
+        feature_flag: 'meeting-prep-ui',
+      });
     } catch (err: unknown) {
       setError('Failed to generate prep.');
       setOpen(true);
@@ -105,17 +146,49 @@ export default function MeetingCard({ meeting }: { meeting: Meeting }) {
         )}
       </CardContent>
       <CardFooter className="flex justify-start rounded-b-2xl bg-white px-6 pt-0 pb-5">
-        <Button
-          size="sm"
-          className="bg-primary text-primary-foreground min-w-[140px] rounded-md"
-          variant="default"
-          onClick={handleGeneratePrep}
-          disabled={loading}
-        >
-          {loading ? 'Generating...' : 'Generate Prep'}
-        </Button>
+        {isPrepEnabled && (
+          <Button
+            size="sm"
+            className="bg-primary text-primary-foreground min-w-[140px] rounded-md"
+            variant="default"
+            onClick={handleGeneratePrep}
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <RingLoader
+                  size={20}
+                  color="#fff"
+                  speedMultiplier={1}
+                  cssOverride={{
+                    display: 'inline-block',
+                    verticalAlign: 'middle',
+                    marginRight: 8,
+                  }}
+                />
+                Generating...
+              </>
+            ) : (
+              buttonText
+            )}
+          </Button>
+        )}
       </CardFooter>
-      <PrepDialog open={open} setOpen={setOpen} prepMd={prepMd} error={error} />
+      {outputVariant === 'sheet' ? (
+        <PrepSheet
+          open={open}
+          setOpen={setOpen}
+          prepMd={prepMd}
+          error={error}
+        />
+      ) : (
+        <PrepDialog
+          open={open}
+          setOpen={setOpen}
+          prepMd={prepMd}
+          error={error}
+        />
+      )}
     </Card>
   );
 }

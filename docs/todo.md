@@ -16,6 +16,6 @@
   - Return markdown string
 - [x] Create `PrepDialog` with markdown viewer
 - [x] Display result in dialog
-- [ ] Capture PostHog events
-- [ ] Gate with PostHog flag
+- [x] Capture PostHog events
+- [x] Gate with PostHog flag
 - [ ] Polish: README, Loom, CI

@@ -11,6 +11,7 @@ import { setGlobalOptions } from 'firebase-functions';
 import { onCall } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import fetch from 'node-fetch';
+import { getPrepPrompt } from './promptTemplates';
 
 // Initialize admin if not already
 if (!admin.apps.length) admin.initializeApp();
@@ -30,13 +31,8 @@ if (!admin.apps.length) admin.initializeApp();
 // this will be the maximum concurrent request count.
 setGlobalOptions({ maxInstances: 10 });
 
-// export const helloWorld = onRequest((request, response) => {
-//   logger.info("Hello logs!", {structuredData: true});
-//   response.send("Hello from Firebase!");
-// });
-
 export const generatePrep = onCall({ timeoutSeconds: 60 }, async request => {
-  const { uid, eventId } = request.data;
+  const { uid, eventId, variant } = request.data;
   if (!uid || !eventId) throw new Error('Missing uid or eventId');
 
   // 1. Fetch meeting
@@ -63,27 +59,8 @@ export const generatePrep = onCall({ timeoutSeconds: 60 }, async request => {
   const notes = notesSnap.docs.map(doc => doc.data());
 
   // 4. Format prompt for OpenRouter
-  const prompt = `Always return your response as valid markdown, wrapped in a code block like \`\`\`markdown ... \`\`\`. Do not include any text outside the code block.
-
-You are an expert meeting assistant. Given the following meeting, emails, and notes, generate a markdown prep brief.
-
-Meeting: ${meeting.title}
-Description: ${meeting.description || '(none)'}
-Attendees: ${(meeting.attendees || []).join(', ')}
-Time: ${meeting.time || '(unknown)'}
-
-Relevant Emails:
-${emails.map(e => `- ${e.subject || '(no subject)'}: ${e.snippet || e.body || '(no content)'}`).join('\n')}
-
-Relevant Notes:
-${notes.map(n => `- ${n.content || n.text || '(no content)'}`).join('\n')}
-
-Generate a markdown summary for this meeting prep, including:
-- Bullet summary of prior exchanges
-- Agenda guess (if missing)
-- Blurbs for attendees
-- Suggested questions
-`;
+  console.log('PROMPT_VARIANT:', variant || 'default');
+  const prompt = getPrepPrompt(variant || 'default', meeting, emails, notes);
 
   // 5. Call OpenRouter API
   const apiKey =
@@ -100,18 +77,6 @@ Generate a markdown summary for this meeting prep, including:
       request.rawRequest.app?.get('openrouter.key'));
   if (!finalKey) throw new Error('OpenRouter API key not set');
 
-  console.log(
-    'OpenRouter request body:',
-    JSON.stringify(
-      {
-        model: 'mistralai/mixtral-8x7b-instruct', // dev
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 1024,
-      },
-      null,
-      2
-    )
-  );
   const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -129,7 +94,6 @@ Generate a markdown summary for this meeting prep, including:
   });
   if (!res.ok) throw new Error(`OpenRouter error: ${res.status}`);
   const data = (await res.json()) as any;
-  console.log('OpenRouter full response:', JSON.stringify(data, null, 2));
   const prepMd =
     data.choices?.[0]?.message?.content || '(No summary generated)';
 

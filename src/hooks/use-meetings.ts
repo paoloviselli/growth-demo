@@ -19,6 +19,7 @@ export default function useMeetings() {
       const meetingsRef = collection(db, 'users/demo/meetings');
       const snapshot = await getDocs(meetingsRef);
       const meetings = snapshot.docs
+        //adding id to each meeting
         .map(doc => ({ id: doc.id, ...(doc.data() as Partial<Meeting>) }))
         .filter(
           (m): m is Meeting => typeof m.time === 'number' && m.time >= now

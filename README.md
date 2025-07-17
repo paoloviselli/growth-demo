@@ -71,6 +71,7 @@ export default tseslint.config([
 # growth-demo
 
 <!-- HOW TO RUN -->
+<!-- run "npm run build" inside /functions folder -->
 <!-- npx firebase emulators:start to start firebase emulator -->
 <!-- then cd into /functions and run npx ts-node src/seed.ts to inject dummy data into the firebase emulator-->
 <!-- Finally run "npm run dev" to start the local FE server -->
